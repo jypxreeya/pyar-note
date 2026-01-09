@@ -14,7 +14,7 @@ const router = useRouter()
     const cantAuth = !email.includes('@') || password.length < 6
     async function handleAuthUser() {
        
-        if (cantAuth) {
+        if(cantAuth) {
             return
         }
         setIsAuthenticating(true)
