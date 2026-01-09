@@ -1,6 +1,7 @@
 'use client'
-import { auth } from "@/firebase"
-import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth"
+import { auth, db } from "@/firebase"
+import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, deleteUser } from "firebase/auth"
+import { collection, deleteDoc, doc, getDocs } from "firebase/firestore"
 import { createContext, useContext, useEffect, useState } from "react"
 
 const AuthContext = createContext()
@@ -26,6 +27,28 @@ export default function AuthProvider(props) {
         return signOut(auth)
     }
 
+    async function deleteAccount() {
+        if (!currentUser) return
+        
+        try {
+            // Delete all user's notes from Firestore
+            const notesRef = collection(db, 'users', currentUser.uid, 'notes')
+            const snapshot = await getDocs(notesRef)
+            
+            // Delete each note document
+            const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref))
+            await Promise.all(deletePromises)
+            
+            // Delete the user's authentication account
+            await deleteUser(currentUser)
+            
+            setCurrentUser(null)
+        } catch (error) {
+            console.error('Error deleting account:', error)
+            throw error
+        }
+    }
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async(user) => {
             setIsLoadingUser(true)
@@ -47,7 +70,7 @@ export default function AuthProvider(props) {
     }, [])
 
     const value = {
-        currentUser,isLoadingUser,signup, login, logout
+        currentUser,isLoadingUser,signup, login, logout, deleteAccount
     }
 
          return (

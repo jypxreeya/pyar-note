@@ -45,7 +45,7 @@ export default function NotesPage() {
     }
 
     async function handleSaveNote() {
-        if (!note?.content) { return }
+        if (!note?.id && !note?.content) { return }
         setSavingNote(true)
         try {
             if (note.id) {
